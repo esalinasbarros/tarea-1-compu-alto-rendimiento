@@ -1,0 +1,32 @@
+Para poder comentar los gráficos generados, primero es importante entender qué son el speedup y la eficiencia.
+El speedup mide cuánto más rápido se ejecuta un programa en paralelo en comparación con su versión secuencial, es decir,
+cuántas veces se acelera el programa al usar p procesadores en lugar de uno.
+Por otro lado, la eficiencia evalúa qué tan bien se están aprovechando los procesadores disponibles durante la ejecución
+paralela.
+
+Sabiendo esto, ya podemos realizar el análisis y los comentarios correspondientes.
+
+En el gráfico speedup_vs_hilos.png se muestra el comportamiento del speedup para las diferentes estrategias implementadas
+con OpenMP y Numba. Se observa que todas las curvas presentan una tendencia creciente al aumentar el número de hilos,
+lo que indica que la paralelización del conteo de números primos se implementó correctamente. Los mejores resultados los
+obtiene OpenMP, alcanzando un speedup cercano a x7 con 8 hilos para las estrategias guided, dynamic y static_chunk, mientras
+que la versión static pura logra aproximadamente x6 con 8 hilos. En comparación, Numba alcanza un máximo de x4.8, lo que
+demuestra un buen nivel de paralelismo, aunque con menor eficiencia que la implementación en C++.
+
+En el gráfico eficiencia_vs_hilos.png se observa una disminución progresiva de la eficiencia al incrementar el número de
+hilos, un comportamiento esperado según la Ley de Amdahl. Las estrategias de OpenMP guided, dynamic y static_chunk
+mantienen una eficiencia alta y estable, con valores cercanos a 0.9 al usar 8 hilos, lo que es coherente con el speedup
+obtenido por estas mismas y demuestra una muy buena escalabilidad. Por su parte, la estrategia static pura presenta una
+caída más pronunciada (alrededor de 0.75 con 8 hilos), mientras que Numba muestra la menor eficiencia entre todas,
+descendiendo desde 1.0 hasta cerca de 0.6, lo que evidencia un mayor costo de coordinación y menor optimización en la
+gestión de hilos en Python.
+
+La explicación de por qué static resulta menos eficiente que las demás estrategias de OpenMP es que esta divide el trabajo
+en bloques fijos iguales, lo cual funciona bien solo si todas las iteraciones tienen el mismo costo. En este caso, cada
+operación depende del número de divisores que se prueban para verificar si un número es primo, por lo que las tareas no
+son homogéneas. En cambio, las estrategias dynamic, guided y static_chunk reparten el trabajo de forma más equitativa,
+reduciendo el desbalance entre hilos.
+
+Por el lado de Numba, al ejecutarse sobre Python, no alcanza el mismo nivel de optimización que C++ con OpenMP nativo.
+Esto genera un mayor overhead y un aprovechamiento menos eficiente del hardware, lo que explica que, aunque escale, su
+rendimiento disminuya al aumentar el número de hilos.
